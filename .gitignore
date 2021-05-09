@@ -1,0 +1,6 @@
+client/target/*
+server/target/*
+synchronization-distiruted-lock/target/*
+client/.idea/*
+server/.idea/*
+synchronization-distiruted-lock/.idea/*
