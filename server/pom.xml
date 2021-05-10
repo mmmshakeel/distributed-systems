@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ds.tutorials</groupId>
+    <groupId>ds.cw2</groupId>
     <artifactId>communication-server</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -31,8 +31,8 @@
             <version>1.36.0</version>
         </dependency>
         <dependency>
-            <groupId>ds.tutorials</groupId>
-            <artifactId>synchronization-distiruted-lock</artifactId>
+            <groupId>ds.cw2</groupId>
+            <artifactId>synchronization-distributed-lock</artifactId>
             <version>2.0.0</version>
         </dependency>
         <dependency>
@@ -80,7 +80,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>ds.tutorials.communication.server.BankServer</mainClass>
+                            <mainClass>ds.cw2.communication.server.TradeServer</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
