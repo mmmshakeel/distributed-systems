@@ -1,6 +1,9 @@
 package ds.cw2.communication.server;
 
 import ds.cw2.synchronization.DistributedLock;
+import ds.cw2.synchronization.tx.DistributedTx;
+import ds.cw2.synchronization.tx.DistributedTxCoordinator;
+import ds.cw2.synchronization.tx.DistributedTxParticipant;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import org.apache.zookeeper.KeeperException;
@@ -14,12 +17,21 @@ public class TradeServer {
     private DistributedLock leaderLock;
     private AtomicBoolean isLeader = new AtomicBoolean(false);
     private byte[] leaderData;
-//    private Map<String, Stock> orderBook = new HashMap();
     private ArrayList<Stock> orderBook = new ArrayList<>();
+
+    DistributedTx transaction;
+    StockOrderServiceImpl stockOrderService;
 
     public TradeServer(String host, int port) throws InterruptedException, IOException, KeeperException {
         this.serverPort = port;
         leaderLock = new DistributedLock("TradeServerTestCluster", buildServerData(host, port));
+
+        stockOrderService = new StockOrderServiceImpl(this);
+        transaction = new DistributedTxParticipant(stockOrderService);
+    }
+
+    public DistributedTx getTransaction() {
+        return transaction;
     }
 
     public boolean isLeader() {
@@ -38,7 +50,7 @@ public class TradeServer {
     public void startServer() throws IOException, InterruptedException, KeeperException {
         Server server = ServerBuilder
                 .forPort(serverPort)
-                .addService(new StockOrderServiceImpl(this))
+                .addService(stockOrderService)
                 .build();
         server.start();
         System.out.println("TradeServer Started and ready to accept requests on port " + serverPort);
@@ -70,6 +82,9 @@ public class TradeServer {
 
         for (Stock orderItem: this.orderBook) {
             if (orderItem.getOrderType().equals(Stock.BUY_ORDER_TYPE)) { // check if someone is ready to sell
+
+                System.out.println("== buy order ==");
+                
                 // check for only sell orders
                 if (orderItem.getPrice() == stock.getPrice()
                         && orderItem.getQuantity() == stock.getQuantity()
@@ -79,6 +94,7 @@ public class TradeServer {
                     System.out.println("Buyer details: Trader ID-" + orderItem.getTraderId());
 
                     orderBook.remove(orderItem);
+                    orderBook.remove(stock);
                     transactionPerformed = true;
                     System.out.println("Sell order transaction complete");
                     break;
@@ -114,6 +130,7 @@ public class TradeServer {
                     System.out.println("Seller details: Trader ID-" + orderItem.getTraderId());
 
                     orderBook.remove(orderItem);
+                    orderBook.remove(stock);
                     transactionPerformed = true;
                     System.out.println("Buy order transaction complete");
                     break;
@@ -141,8 +158,15 @@ public class TradeServer {
         return result;
     }
 
+    private void beTheLeader() {
+        System.out.println("I got the leader lock. Now acting as primary");
+        isLeader.set(true);
+        transaction = new DistributedTxCoordinator(stockOrderService);
+    }
+
     public static void main(String[] args) throws Exception {
         DistributedLock.setZooKeeperURL("localhost:2181");
+        DistributedTx.setZooKeeperURL("localhost:2181");
 
         if (args.length != 1) {
             System.out.println("Usage executable-name <port>");
@@ -172,8 +196,8 @@ public class TradeServer {
                     Thread.sleep(10000);
                     leader = leaderLock.tryAcquireLock();
                 }
-                System.out.println("I got the leader lock. Now acting as primary");
-                isLeader.set(true);
+
+                beTheLeader();
                 currentLeaderData = null;
             } catch (Exception e) {
             }

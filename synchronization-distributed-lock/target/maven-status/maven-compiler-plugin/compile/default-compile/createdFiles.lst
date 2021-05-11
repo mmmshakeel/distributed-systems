@@ -1,3 +1,7 @@
+ds/cw2/synchronization/tx/DistributedTx.class
+ds/cw2/synchronization/ZooKeeperClient.class
 ds/cw2/synchronization/DistributedLock.class
 ds/cw2/synchronization/DummyProcess.class
-ds/cw2/synchronization/ZooKeeperClient.class
+ds/cw2/synchronization/tx/DistributedTxListner.class
+ds/cw2/synchronization/tx/DistributedTxParticipant.class
+ds/cw2/synchronization/tx/DistributedTxCoordinator.class
